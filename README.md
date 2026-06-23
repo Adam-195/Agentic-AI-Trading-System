@@ -105,7 +105,7 @@ trading-agent/
 ## Build Phases
 
 - [x] Phase 1 — Project structure, config, models, tools
-- [ ] Phase 2 — LangChain tool wrappers
+- [x] Phase 2 — LangChain tool wrappers
 - [ ] Phase 3 — LangGraph agent graph
 - [ ] Phase 4 — Alpaca paper trading execution
 - [ ] Phase 5 — Scheduling and state persistence
