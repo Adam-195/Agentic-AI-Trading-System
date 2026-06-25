@@ -110,3 +110,8 @@ trading-agent/
 - [x] Phase 4 — Alpaca paper trading execution
 - [ ] Phase 5 — Scheduling and state persistence
 - [ ] Phase 6 — Polish, error handling, logging
+
+
+## Why I wanted to create this
+
+With the rise of AI, tools and new techtacks. I wanted to develop my understanding of the possibilty of the tools and technology available to me.

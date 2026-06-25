@@ -178,3 +178,4 @@ class Portfolio:
 
         lines.append("=" * 50)
         return "\n".join(lines)
+    
