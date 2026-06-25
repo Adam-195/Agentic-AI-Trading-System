@@ -106,7 +106,7 @@ trading-agent/
 
 - [x] Phase 1 — Project structure, config, models, tools
 - [x] Phase 2 — LangChain tool wrappers
-- [ ] Phase 3 — LangGraph agent graph
-- [ ] Phase 4 — Alpaca paper trading execution
+- [x] Phase 3 — LangGraph agent graph
+- [x] Phase 4 — Alpaca paper trading execution
 - [ ] Phase 5 — Scheduling and state persistence
 - [ ] Phase 6 — Polish, error handling, logging
