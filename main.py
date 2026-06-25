@@ -7,6 +7,7 @@ Run on loop:  python main.py --loop
 
 import argparse
 import logging
+import os
 import time
 from datetime import datetime
 
@@ -14,9 +15,9 @@ import schedule
 
 from config import config
 from models.portfolio import Portfolio
-from agents.research_agent import research_ticker
-from agents.reasoning_agent import make_decision
-from agents.execution_agent import execute_trade
+from graph.trading_graph import build_graph
+
+os.makedirs(config.LOG_DIR, exist_ok=True)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -30,13 +31,15 @@ logger = logging.getLogger(__name__)
 
 
 def run_agent() -> None:
-    """Single run of the agent across the full watchlist."""
-    logger.info(f"--- Agent run started at {datetime.utcnow().isoformat()} ---")
+    """Single run of the agent across the full watchlist via LangGraph."""
+    run_at = datetime.utcnow().isoformat()
+    logger.info(f"--- Agent run started at {run_at} ---")
 
-    # Portfolio is loaded/initialised here
-    # Graph import deferred until Phase 5
     portfolio = Portfolio()
     portfolio.load()
+
+    # Build the LangGraph workflow (portfolio injected via closure)
+    graph = build_graph(portfolio)
 
     logger.info(f"Watchlist: {config.WATCHLIST}")
 
@@ -44,36 +47,45 @@ def run_agent() -> None:
     for ticker in config.WATCHLIST:
         logger.info(f"\n{'='*50}\nProcessing {ticker}\n{'='*50}")
 
-        # 1. Research
-        research = research_ticker(ticker)
-        if research is None:
-            logger.warning(f"Skipping {ticker} — research failed.")
-            continue
-
-        # 2. Reason
-        current_price = research["market_data"]["price"]
-        trade = make_decision(research, portfolio, current_price)
-        if trade is None:
-            logger.warning(f"Skipping {ticker} — reasoning failed.")
-            continue
-
-        # 3. Execute
-        success = execute_trade(trade, portfolio)
-        results.append({
+        # Initial state for this ticker
+        initial_state = {
             "ticker": ticker,
-            "action": trade.action,
-            "confidence": trade.confidence,
-            "success": success,
-        })
+            "market_data": None,
+            "research": None,
+            "trade": None,
+            "action": None,
+            "executed": False,
+            "error": None,
+            "portfolio_snapshot": None,
+            "run_at": run_at,
+        }
+
+        try:
+            final_state = graph.invoke(initial_state)
+            results.append({
+                "ticker": ticker,
+                "action": final_state.get("action", "unknown"),
+                "executed": final_state.get("executed", False),
+                "error": final_state.get("error"),
+            })
+        except Exception as e:
+            logger.error(f"Graph run failed for {ticker}: {e}")
+            results.append({
+                "ticker": ticker,
+                "action": "error",
+                "executed": False,
+                "error": str(e),
+            })
 
     # Summary
     logger.info(f"\n{'='*50}\nRUN SUMMARY\n{'='*50}")
     for r in results:
-        status = "✓" if r["success"] else "✗"
-        logger.info(
-            f"{status} {r['ticker']}: {r['action'].upper()} "
-            f"(confidence={r['confidence']:.0%})"
-        )
+        if r["error"]:
+            logger.info(f"✗ {r['ticker']}: ERROR — {r['error']}")
+        else:
+            status = "✓" if r["executed"] else "✗"
+            logger.info(f"{status} {r['ticker']}: {r['action'].upper()}")
+
     logger.info(portfolio.summary())
     logger.info("--- Agent run complete ---\n")
 
@@ -91,7 +103,7 @@ def main() -> None:
 
     if args.loop:
         logger.info(f"Starting scheduled loop every {config.RUN_INTERVAL_MINUTES} minutes.")
-        run_agent()  # Run immediately on start
+        run_agent()
         schedule.every(config.RUN_INTERVAL_MINUTES).minutes.do(run_agent)
         while True:
             schedule.run_pending()

@@ -116,7 +116,7 @@ def make_decision(
     chain = REASONING_PROMPT | llm
 
     current_position = portfolio.positions.get(ticker, 0.0)
-    avg_buy_price = portfolio.avg_buy_price.get(ticker, 0.0)
+    avg_buy_price = portfolio.avg_buy_price.get(ticker, 0.0)            
 
     from agents.research_agent import format_research_for_prompt
     research_text = format_research_for_prompt(research)
