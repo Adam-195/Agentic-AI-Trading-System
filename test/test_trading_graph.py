@@ -180,7 +180,7 @@ class TestBuildGraph:
             "error": None,
             "portfolio_snapshot": None,
             "run_at": "2024-01-01T00:00:00",
-        })
+        }, config={"configurable": {"thread_id": "test"}})
 
         assert result["action"] == "buy"
         assert result["executed"] is True
@@ -213,6 +213,6 @@ class TestBuildGraph:
             "error": None,
             "portfolio_snapshot": None,
             "run_at": "2024-01-01T00:00:00",
-        })
+        }, config={"configurable": {"thread_id": "test"}})
 
         assert result["action"] == "hold"

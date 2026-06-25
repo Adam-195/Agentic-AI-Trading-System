@@ -11,6 +11,8 @@ from typing import Optional
 import yfinance as yf
 import requests
 
+from utils.retry import retry
+
 logger = logging.getLogger(__name__)
 
 # Map common crypto tickers to CoinGecko IDs
@@ -28,6 +30,7 @@ def is_crypto(ticker: str) -> bool:
     return ticker in COINGECKO_IDS
 
 
+@retry(max_attempts=3, delay=2.0, exceptions=(requests.RequestException,))
 def get_crypto_price(ticker: str) -> Optional[dict]:
     coin_id = COINGECKO_IDS.get(ticker)
     if not coin_id:
@@ -60,6 +63,7 @@ def get_crypto_price(ticker: str) -> Optional[dict]:
         return None
 
 
+@retry(max_attempts=3, delay=2.0, exceptions=(Exception,))
 def get_stock_price(ticker: str) -> Optional[dict]:
     try:
         stock = yf.Ticker(ticker)

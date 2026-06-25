@@ -22,6 +22,7 @@ from agents.execution_agent import execute_trade
 from models.portfolio import Portfolio
 from models.trade import Trade
 from tools.market_data import get_market_data
+from graph.checkpointer import get_checkpointer
 
 logger = logging.getLogger(__name__)
 
@@ -201,10 +202,11 @@ def should_trade(state: TradingState) -> str:
 # Graph builder
 # ------------------------------------------------------------------
 
-def build_graph(portfolio: Portfolio) -> any:
+def build_graph(portfolio: Portfolio, use_checkpointer: bool = True) -> any:
     """
     Compile and return the LangGraph trading workflow.
     Portfolio is injected via closures so nodes can share state.
+    Checkpointer gives the agent persistent memory across restarts.
     """
 
     # Wrap nodes that need portfolio access in closures
@@ -239,5 +241,9 @@ def build_graph(portfolio: Portfolio) -> any:
     # Both execute and hold lead to END
     workflow.add_edge("execute", END)
     workflow.add_edge("hold", END)
+
+    if use_checkpointer:
+        checkpointer = get_checkpointer()
+        return workflow.compile(checkpointer=checkpointer)
 
     return workflow.compile()

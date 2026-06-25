@@ -32,7 +32,7 @@ class Config:
     SENTIMENT_MODEL: str = "ProsusAI/finbert"
 
     # --- Paths ---
-    PORTFOLIO_STATE_FILE: str = "portfolio_state.json"
+    PORTFOLIO_STATE_FILE: str = "data/portfolio_state.json"
     LOG_DIR: str = "logs"
 
     @classmethod
